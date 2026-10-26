@@ -1,1 +1,234 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
+namespace BT01
+{
+    public class Nguoi
+    {
+        private string hoTen;
+        private DateTime ngaySinh;
+        private string diaChi;
+
+        public string HoTen
+        {
+            get { return hoTen; }
+            set { hoTen = value; }
+        }
+        public DateTime NgaySinh
+        {
+            get { return ngaySinh; }
+            set { ngaySinh = value; }
+        }
+        public string DiaChi
+        {
+            get { return diaChi; }
+            set { diaChi = value; }
+        }
+
+        // Property chỉ đọc
+        public int LayTuoi
+        {
+            get { return DateTime.Now.Year - ngaySinh.Year; }
+        }
+
+        public Nguoi()
+        {
+            hoTen = "";
+            ngaySinh = DateTime.Now;
+            diaChi = "";
+        }
+
+        public Nguoi(string hoTen, DateTime ngaySinh, string diaChi)
+        {
+            this.hoTen = hoTen;
+            this.ngaySinh = ngaySinh;
+            this.diaChi = diaChi;
+        }
+
+        public virtual void XemThongTin()
+        {
+            Console.WriteLine("Ho ten: " + hoTen);
+            Console.WriteLine("Ngay sinh: " + ngaySinh.ToString("dd/MM/yyyy"));
+            Console.WriteLine("Dia chi: " + diaChi);
+            Console.WriteLine("Tuoi: " + LayTuoi);
+        }
+    }
+
+    public class SinhVien : Nguoi
+    {
+        private string maSV;
+        private string maLop;
+        private string email;
+        private string dienThoai;
+
+        public string MaSV
+        {
+            get { return maSV; }
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value)) maSV = value;
+                else throw new Exception("Ma sinh vien khong duoc rong");
+            }
+        }
+        public string MaLop
+        {
+            get { return maLop; }
+            set { maLop = value; }
+        }
+        public string Email
+        {
+            get { return email; }
+            set
+            {
+                if (value.Contains("@")) email = value;
+                else throw new Exception("Email khong hop le");
+            }
+        }
+        public string DienThoai
+        {
+            get { return dienThoai; }
+            set
+            {
+                if (value.All(char.IsDigit) && value.Length >= 9) dienThoai = value;
+                else throw new Exception("So dien thoai khong hop le");
+            }
+        }
+
+        public SinhVien() : base()
+        {
+            maSV = "";
+            maLop = "";
+            email = "";
+            dienThoai = "";
+        }
+
+        public SinhVien(string hoTen, DateTime ngaySinh, string diaChi,
+                        string maSV, string maLop, string email, string dienThoai)
+            : base(hoTen, ngaySinh, diaChi)
+        {
+            MaSV = maSV;
+            MaLop = maLop;
+            Email = email;
+            DienThoai = dienThoai;
+        }
+
+        public override void XemThongTin()
+        {
+            base.XemThongTin();
+            Console.WriteLine("Ma SV: " + maSV);
+            Console.WriteLine("Ma lop: " + maLop);
+            Console.WriteLine("Email: " + email);
+            Console.WriteLine("Dien thoai: " + dienThoai);
+        }
+    }
+
+    public class NhanVien : Nguoi
+    {
+        private string maNhanVien;
+        private string email;
+        private string dienThoai;
+        private DateTime ngayLamViec;
+        private string maCongTy;
+
+        public string MaNhanVien
+        {
+            get { return maNhanVien; }
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value)) maNhanVien = value;
+                else throw new Exception("Ma nhan vien khong duoc rong");
+            }
+        }
+        public string Email
+        {
+            get { return email; }
+            set
+            {
+                if (value.Contains("@")) email = value;
+                else throw new Exception("Email khong hop le");
+            }
+        }
+        public string DienThoai
+        {
+            get { return dienThoai; }
+            set
+            {
+                if (value.All(char.IsDigit) && value.Length >= 9) dienThoai = value;
+                else throw new Exception("So dien thoai khong hop le");
+            }
+        }
+        public DateTime NgayLamViec
+        {
+            get { return ngayLamViec; }
+            set
+            {
+                if (value <= DateTime.Now) ngayLamViec = value;
+                else throw new Exception("Ngay lam viec khong hop le");
+            }
+        }
+        public string MaCongTy
+        {
+            get { return maCongTy; }
+            set { maCongTy = value; }
+        }
+
+        public NhanVien() : base()
+        {
+            maNhanVien = "";
+            email = "";
+            dienThoai = "";
+            ngayLamViec = DateTime.Now;
+            maCongTy = "";
+        }
+
+        public NhanVien(string hoTen, DateTime ngaySinh, string diaChi,
+                        string maNhanVien, string email, string dienThoai,
+                        DateTime ngayLamViec, string maCongTy)
+            : base(hoTen, ngaySinh, diaChi)
+        {
+            MaNhanVien = maNhanVien;
+            Email = email;
+            DienThoai = dienThoai;
+            NgayLamViec = ngayLamViec;
+            MaCongTy = maCongTy;
+        }
+
+        public override void XemThongTin()
+        {
+            base.XemThongTin();
+            Console.WriteLine("Ma nhan vien: " + maNhanVien);
+            Console.WriteLine("Email: " + email);
+            Console.WriteLine("Dien thoai: " + dienThoai);
+            Console.WriteLine("Ngay lam viec: " + ngayLamViec.ToString("dd/MM/yyyy"));
+            Console.WriteLine("Ma cong ty: " + maCongTy);
+        }
+    }
+
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.OutputEncoding = Encoding.UTF8;
+
+            SinhVien sv = new SinhVien("Nguyen Van A", new DateTime(2004, 5, 20), "TP.HCM",
+                                       "SV001", "CNTT01", "a@gmail.com", "0901234567");
+            Console.WriteLine("=== SINH VIEN ===");
+            sv.XemThongTin();
+
+            NhanVien nv = new NhanVien("Tran Thi B", new DateTime(1995, 3, 10), "Ha Noi",
+                                       "NV001", "b@gmail.com", "0912345678",
+                                       new DateTime(2020, 1, 15), "CT01");
+            Console.WriteLine("\n=== NHAN VIEN ===");
+            nv.XemThongTin();
+
+            // Test property
+            sv.HoTen = "Le Van C";
+            Console.WriteLine("\nTen moi: " + sv.HoTen + ", tuoi: " + sv.LayTuoi);
+
+            Console.ReadKey();
+        }
+    }
+}
