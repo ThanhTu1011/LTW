@@ -1,1 +1,185 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
+namespace Lab04_Bai33
+{
+    public class FormNhaKhoa : Form
+    {
+        TextBox txtHoTen, txtKhac;
+        GroupBox grpDichVu;
+        CheckBox chkLayCaoRang, chkTramRang, chkNhoRang, chkXQuang, chkTayTrang, chkKhac;
+        Label lblTongTien;
+        Button btnTinh, btnXoa, btnThoat;
+
+        public FormNhaKhoa()
+        {
+            // ===== Form =====
+            Text = "Ứng dụng tính tiền nha khoa";
+            ClientSize = new Size(400, 410);
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+
+            // ===== Họ tên =====
+            Label lblHoTen = new Label();
+            lblHoTen.Text = "Họ tên bệnh nhân:";
+            lblHoTen.Location = new Point(20, 23);
+            lblHoTen.AutoSize = true;
+            Controls.Add(lblHoTen);
+
+            txtHoTen = new TextBox();
+            txtHoTen.Location = new Point(140, 20);
+            txtHoTen.Width = 230;
+            txtHoTen.TextChanged += txtHoTen_TextChanged;
+            Controls.Add(txtHoTen);
+
+            // ===== GroupBox dịch vụ =====
+            grpDichVu = new GroupBox();
+            grpDichVu.Text = "Dịch vụ";
+            grpDichVu.Location = new Point(20, 60);
+            grpDichVu.Size = new Size(350, 225);
+            Controls.Add(grpDichVu);
+
+            chkLayCaoRang = TaoCheckBox("Lấy cao răng - 100,000", 25);
+            chkTramRang = TaoCheckBox("Trám răng - 200,000", 55);
+            chkNhoRang = TaoCheckBox("Nhổ răng - 150,000", 85);
+            chkXQuang = TaoCheckBox("Chụp X-quang - 80,000", 115);
+            chkTayTrang = TaoCheckBox("Tẩy trắng răng - 500,000", 145);
+
+            chkKhac = new CheckBox();
+            chkKhac.Text = "Khác (số tiền):";
+            chkKhac.Location = new Point(15, 180);
+            chkKhac.Width = 120;
+            chkKhac.CheckedChanged += chkKhac_CheckedChanged;
+            grpDichVu.Controls.Add(chkKhac);
+
+            txtKhac = new TextBox();
+            txtKhac.Location = new Point(140, 178);
+            txtKhac.Width = 190;
+            txtKhac.Enabled = false;            // khóa lúc đầu
+            grpDichVu.Controls.Add(txtKhac);
+
+            // ===== Tổng tiền =====
+            lblTongTien = new Label();
+            lblTongTien.Text = "Tổng tiền: 0 VND";
+            lblTongTien.Font = new Font("Segoe UI", 12, FontStyle.Bold);
+            lblTongTien.ForeColor = Color.DarkRed;
+            lblTongTien.Location = new Point(20, 300);
+            lblTongTien.AutoSize = true;
+            Controls.Add(lblTongTien);
+
+            // ===== Các nút =====
+            btnTinh = TaoButton("Tính tiền", 20);
+            btnTinh.Enabled = false;            // khóa lúc đầu
+            btnTinh.Click += btnTinh_Click;
+
+            btnXoa = TaoButton("Làm mới", 145);
+            btnXoa.Click += btnXoa_Click;
+
+            btnThoat = TaoButton("Thoát", 270);
+            btnThoat.Click += btnThoat_Click;
+        }
+
+        // ===== Hàm hỗ trợ tạo control =====
+        private CheckBox TaoCheckBox(string text, int y)
+        {
+            CheckBox c = new CheckBox();
+            c.Text = text;
+            c.Location = new Point(15, y);
+            c.Width = 320;
+            grpDichVu.Controls.Add(c);
+            return c;
+        }
+
+        private Button TaoButton(string text, int x)
+        {
+            Button b = new Button();
+            b.Text = text;
+            b.Location = new Point(x, 350);
+            b.Size = new Size(100, 35);
+            Controls.Add(b);
+            return b;
+        }
+
+        // ===== Sự kiện =====
+
+        // Chỉ mở nút Tính tiền khi đã nhập họ tên
+        private void txtHoTen_TextChanged(object sender, EventArgs e)
+        {
+            btnTinh.Enabled = txtHoTen.Text.Trim() != "";
+        }
+
+        // Check "Khác" thì mở ô nhập tiền, bỏ check thì khóa lại
+        private void chkKhac_CheckedChanged(object sender, EventArgs e)
+        {
+            txtKhac.Enabled = chkKhac.Checked;
+
+            if (chkKhac.Checked)
+                txtKhac.Focus();
+            else
+                txtKhac.Clear();
+        }
+
+        // Tính tổng tiền
+        private void btnTinh_Click(object sender, EventArgs e)
+        {
+            double tong = 0;
+
+            if (chkLayCaoRang.Checked) tong += 100000;
+            if (chkTramRang.Checked) tong += 200000;
+            if (chkNhoRang.Checked) tong += 150000;
+            if (chkXQuang.Checked) tong += 80000;
+            if (chkTayTrang.Checked) tong += 500000;
+
+            if (chkKhac.Checked)
+            {
+                double tienKhac;
+                if (double.TryParse(txtKhac.Text, out tienKhac) && tienKhac >= 0)
+                {
+                    tong += tienKhac;
+                }
+                else
+                {
+                    MessageBox.Show("Số tiền khác không hợp lệ!");
+                    txtKhac.Focus();
+                    return;
+                }
+            }
+
+            lblTongTien.Text = "Tổng tiền: " + tong.ToString("N0") + " VND";
+        }
+
+        // Làm mới form
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            txtHoTen.Clear();
+
+            foreach (Control c in grpDichVu.Controls)
+            {
+                if (c is CheckBox)
+                    ((CheckBox)c).Checked = false;
+            }
+
+            txtKhac.Clear();
+            lblTongTien.Text = "Tổng tiền: 0 VND";
+            txtHoTen.Focus();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+    }
+
+    static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new FormNhaKhoa());
+        }
+    }
+}
