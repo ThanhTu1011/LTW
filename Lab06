@@ -1,1 +1,225 @@
+using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
 
+namespace Lab06_MyPaint
+{
+    public class FormPaint : Form
+    {
+        ComboBox cmbCongCu;
+        Button btnMau, btnXoa;
+        NumericUpDown nudDay;
+        TextBox txtChuoi;
+        PictureBox pbVe;
+
+        Bitmap bm;                          // bức tranh được lưu lại
+        Color mau = Color.Black;
+        Point diemDau, diemCuoi;
+        bool dangVe = false;
+
+        public FormPaint()
+        {
+            // ===== Form =====
+            Text = "My Paint";
+            ClientSize = new Size(800, 600);
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+
+            // ===== Thanh công cụ =====
+            TaoLabel("Công cụ:", 10, 14);
+            cmbCongCu = new ComboBox();
+            cmbCongCu.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbCongCu.Items.AddRange(new object[] {
+                "Bút chì", "Đường thẳng",
+                "HCN rỗng", "Ellipse rỗng",
+                "HCN đặc", "Ellipse đặc",
+                "Chuỗi" });
+            cmbCongCu.SelectedIndex = 1;
+            cmbCongCu.Location = new Point(70, 10);
+            cmbCongCu.Width = 120;
+            Controls.Add(cmbCongCu);
+
+            btnMau = new Button();
+            btnMau.Text = "Màu";
+            btnMau.BackColor = mau;
+            btnMau.ForeColor = Color.White;
+            btnMau.Location = new Point(205, 8);
+            btnMau.Size = new Size(70, 28);
+            btnMau.Click += btnMau_Click;
+            Controls.Add(btnMau);
+
+            TaoLabel("Độ dày:", 290, 14);
+            nudDay = new NumericUpDown();
+            nudDay.Minimum = 1;
+            nudDay.Maximum = 30;
+            nudDay.Value = 2;
+            nudDay.Location = new Point(345, 11);
+            nudDay.Width = 50;
+            Controls.Add(nudDay);
+
+            TaoLabel("Chuỗi:", 410, 14);
+            txtChuoi = new TextBox();
+            txtChuoi.Text = "Hello";
+            txtChuoi.Location = new Point(455, 11);
+            txtChuoi.Width = 150;
+            Controls.Add(txtChuoi);
+
+            btnXoa = new Button();
+            btnXoa.Text = "Xóa hết";
+            btnXoa.Location = new Point(620, 8);
+            btnXoa.Size = new Size(80, 28);
+            btnXoa.Click += btnXoa_Click;
+            Controls.Add(btnXoa);
+
+            // ===== Vùng vẽ =====
+            pbVe = new PictureBox();
+            pbVe.Location = new Point(0, 45);
+            pbVe.Size = new Size(800, 555);
+            pbVe.BackColor = Color.White;
+            pbVe.Cursor = Cursors.Cross;
+            pbVe.MouseDown += pbVe_MouseDown;
+            pbVe.MouseMove += pbVe_MouseMove;
+            pbVe.MouseUp += pbVe_MouseUp;
+            pbVe.Paint += pbVe_Paint;
+            Controls.Add(pbVe);
+
+            // Tạo bức tranh trắng
+            bm = new Bitmap(pbVe.Width, pbVe.Height);
+            using (Graphics g = Graphics.FromImage(bm))
+                g.Clear(Color.White);
+            pbVe.Image = bm;
+        }
+
+        private void TaoLabel(string text, int x, int y)
+        {
+            Label l = new Label();
+            l.Text = text;
+            l.Location = new Point(x, y);
+            l.AutoSize = true;
+            Controls.Add(l);
+        }
+
+        // ===== Hàm vẽ hình theo công cụ đang chọn =====
+        private void VeHinh(Graphics g, Point p1, Point p2)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            Pen pen = new Pen(mau, (float)nudDay.Value);
+            Brush brush = new SolidBrush(mau);
+
+            // Chuẩn hóa tọa độ (kéo từ phải sang trái hay dưới lên trên đều đúng)
+            int x = Math.Min(p1.X, p2.X);
+            int y = Math.Min(p1.Y, p2.Y);
+            int w = Math.Abs(p2.X - p1.X);
+            int h = Math.Abs(p2.Y - p1.Y);
+
+            switch (cmbCongCu.SelectedIndex)
+            {
+                case 1: g.DrawLine(pen, p1, p2); break;                 // đường thẳng
+                case 2: g.DrawRectangle(pen, x, y, w, h); break;        // HCN rỗng
+                case 3: g.DrawEllipse(pen, x, y, w, h); break;          // ellipse rỗng
+                case 4: g.FillRectangle(brush, x, y, w, h); break;      // HCN đặc
+                case 5: g.FillEllipse(brush, x, y, w, h); break;        // ellipse đặc
+                case 6:                                                 // chuỗi
+                    using (Font font = new Font("Arial", 16))
+                        g.DrawString(txtChuoi.Text, font, brush, p1.X, p1.Y);
+                    break;
+            }
+
+            pen.Dispose();
+            brush.Dispose();
+        }
+
+        // ===== Sự kiện chuột =====
+        private void pbVe_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+            dangVe = true;
+            diemDau = e.Location;
+            diemCuoi = e.Location;
+        }
+
+        private void pbVe_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!dangVe) return;
+
+            if (cmbCongCu.SelectedIndex == 0)
+            {
+                // Bút chì: vẽ thẳng lên bức tranh
+                using (Graphics g = Graphics.FromImage(bm))
+                {
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    using (Pen pen = new Pen(mau, (float)nudDay.Value))
+                    {
+                        pen.StartCap = LineCap.Round;
+                        pen.EndCap = LineCap.Round;
+                        g.DrawLine(pen, diemCuoi, e.Location);
+                    }
+                }
+                diemCuoi = e.Location;
+            }
+            else
+            {
+                // Các hình khác: chỉ xem trước khi đang kéo chuột
+                diemCuoi = e.Location;
+            }
+            pbVe.Invalidate();
+        }
+
+        private void pbVe_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (!dangVe) return;
+            dangVe = false;
+            diemCuoi = e.Location;
+
+            if (cmbCongCu.SelectedIndex != 0)
+            {
+                // Thả chuột: vẽ hình chính thức lên bức tranh
+                using (Graphics g = Graphics.FromImage(bm))
+                    VeHinh(g, diemDau, diemCuoi);
+            }
+            pbVe.Invalidate();
+        }
+
+        // Vẽ xem trước hình đang kéo
+        private void pbVe_Paint(object sender, PaintEventArgs e)
+        {
+            if (dangVe && cmbCongCu.SelectedIndex != 0)
+                VeHinh(e.Graphics, diemDau, diemCuoi);
+        }
+
+        // ===== Các nút =====
+        private void btnMau_Click(object sender, EventArgs e)
+        {
+            ColorDialog dlg = new ColorDialog();
+            dlg.Color = mau;
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                mau = dlg.Color;
+                btnMau.BackColor = mau;
+                // Đổi màu chữ nút để dễ đọc
+                btnMau.ForeColor = (mau.GetBrightness() > 0.5f) ? Color.Black : Color.White;
+            }
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            using (Graphics g = Graphics.FromImage(bm))
+                g.Clear(Color.White);
+            pbVe.Invalidate();
+        }
+    }
+
+    static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new FormPaint());
+        }
+    }
+}
